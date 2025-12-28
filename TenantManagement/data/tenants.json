@@ -1,0 +1,46 @@
+[
+    {
+        "username": "jisan",
+        "password_hash": "b5566e6d68d6195997cebc10515961bd6e8936cdc6b1f6a902cb83748f66db28",
+        "role": "tenant",
+        "tenant_id": "T-001",
+        "name": "Jisan",
+        "phone": "01750197328",
+        "assigned_flat_id": null,
+        "flat_rent": 0.0,
+        "payments": []
+    },
+    {
+        "username": "jisan",
+        "password_hash": "b5566e6d68d6195997cebc10515961bd6e8936cdc6b1f6a902cb83748f66db28",
+        "role": "tenant",
+        "tenant_id": "T-002",
+        "name": "jisan",
+        "phone": "5412",
+        "assigned_flat_id": null,
+        "flat_rent": 0.0,
+        "payments": []
+    },
+    {
+        "username": "jisan",
+        "password_hash": "b5566e6d68d6195997cebc10515961bd6e8936cdc6b1f6a902cb83748f66db28",
+        "role": "tenant",
+        "tenant_id": "T-003",
+        "name": "jisan",
+        "phone": "2451",
+        "assigned_flat_id": null,
+        "flat_rent": 0.0,
+        "payments": []
+    },
+    {
+        "username": "jisan",
+        "password_hash": "b5566e6d68d6195997cebc10515961bd6e8936cdc6b1f6a902cb83748f66db28",
+        "role": "tenant",
+        "tenant_id": "T-004",
+        "name": "jisan",
+        "phone": "54",
+        "assigned_flat_id": null,
+        "flat_rent": 0.0,
+        "payments": []
+    }
+]
