@@ -1,8 +1,113 @@
 [
     {
-        "flat_id": "7",
-        "floor": "65",
-        "rent": 46.0,
+        "flat_id": "1A",
+        "floor": "1",
+        "rent": 12000,
+        "status": "Available",
+        "tenant_id": null
+    },
+    {
+        "flat_id": "1B",
+        "floor": "1",
+        "rent": 12000,
+        "status": "Available",
+        "tenant_id": null
+    },
+    {
+        "flat_id": "2A",
+        "floor": "2",
+        "rent": 12500,
+        "status": "Occupied",
+        "tenant_id": "T-001"
+    },
+    {
+        "flat_id": "2B",
+        "floor": "2",
+        "rent": 12500,
+        "status": "Occupied",
+        "tenant_id": "T-006"
+    },
+    {
+        "flat_id": "3A",
+        "floor": "3",
+        "rent": 13000,
+        "status": "Available",
+        "tenant_id": null
+    },
+    {
+        "flat_id": "3B",
+        "floor": "3",
+        "rent": 13000,
+        "status": "Occupied",
+        "tenant_id": "T-002"
+    },
+    {
+        "flat_id": "4A",
+        "floor": "4",
+        "rent": 13500,
+        "status": "Available",
+        "tenant_id": null
+    },
+    {
+        "flat_id": "4B",
+        "floor": "4",
+        "rent": 13500,
+        "status": "Available",
+        "tenant_id": null
+    },
+    {
+        "flat_id": "5A",
+        "floor": "5",
+        "rent": 14000,
+        "status": "Occupied",
+        "tenant_id": "T-003"
+    },
+    {
+        "flat_id": "5B",
+        "floor": "5",
+        "rent": 14000,
+        "status": "Occupied",
+        "tenant_id": "T-006"
+    },
+    {
+        "flat_id": "6A",
+        "floor": "6",
+        "rent": 14500,
+        "status": "Available",
+        "tenant_id": null
+    },
+    {
+        "flat_id": "6B",
+        "floor": "6",
+        "rent": 14500,
+        "status": "Occupied",
+        "tenant_id": "T-004"
+    },
+    {
+        "flat_id": "7A",
+        "floor": "7",
+        "rent": 15000,
+        "status": "Available",
+        "tenant_id": null
+    },
+    {
+        "flat_id": "7B",
+        "floor": "7",
+        "rent": 15000,
+        "status": "Available",
+        "tenant_id": null
+    },
+    {
+        "flat_id": "8A",
+        "floor": "8",
+        "rent": 15500,
+        "status": "Occupied",
+        "tenant_id": "T-005"
+    },
+    {
+        "flat_id": "8B",
+        "floor": "8",
+        "rent": 15500,
         "status": "Available",
         "tenant_id": null
     }
