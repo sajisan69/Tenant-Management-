@@ -10,7 +10,6 @@ FONT_HEADER = ("Segoe UI", 24, "bold")
 FONT_SUB = ("Segoe UI", 12)
 FONT_BODY = ("Segoe UI", 10)
 
-# --- MODERN BUTTON ---
 class ModernButton(tk.Button):
     def __init__(self, master, **kwargs):
         super().__init__(master, **kwargs)
@@ -32,7 +31,6 @@ class ModernButton(tk.Button):
     def on_leave(self, e):
         self.config(bg=self.default_bg)
 
-# --- PLACEHOLDER FUNCTION ---
 def add_placeholder(entry, placeholder):
     entry.insert(0, placeholder)
     entry.config(fg="gray")
@@ -41,7 +39,6 @@ def add_placeholder(entry, placeholder):
     entry.bind("<FocusOut>", lambda e: (entry.insert(0, placeholder), entry.config(fg="gray"))
                if entry.get() == "" else None)
 
-# --- MAIN APPLICATION ---
 class MainApp(tk.Tk):
     def __init__(self, system):
         super().__init__()
@@ -73,7 +70,6 @@ class MainApp(tk.Tk):
             frame.refresh(data)
         frame.tkraise()
 
-# --- LOGIN FRAME ---
 class LoginFrame(tk.Frame):
     def __init__(self, parent, controller, system):
         super().__init__(parent, bg=COLOR_PRIMARY)
@@ -124,7 +120,6 @@ class LoginFrame(tk.Frame):
         else:
             messagebox.showerror("Login Failed", "Invalid Admin credentials")
 
-# --- SIGNUP FRAME ---
 class SignupFrame(tk.Frame):
     def __init__(self, parent, controller, system):
         super().__init__(parent, bg=COLOR_BG)
@@ -154,7 +149,6 @@ class SignupFrame(tk.Frame):
         else:
             messagebox.showerror("Error", "All fields are required.")
 
-# --- ADMIN FRAME ---
 class AdminFrame(tk.Frame):
     def __init__(self, parent, controller, system):
         super().__init__(parent, bg=COLOR_BG)
@@ -239,7 +233,6 @@ class AdminFrame(tk.Frame):
             self.tree_tenants.insert("", "end", values=(t.tenant_id, t.name, t.phone, t.assigned_flat_id or "None",
                                                         t.get_due_amount()))
 
-# --- TENANT FRAME ---
 class TenantFrame(tk.Frame):
     def __init__(self, parent, controller, system):
         super().__init__(parent, bg=COLOR_BG)
