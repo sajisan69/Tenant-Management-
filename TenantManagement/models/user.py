@@ -1,21 +1,22 @@
 import hashlib
 
-
 class User:
-    def __init__(self, username, password, role="tenant"):
+    def __init__(self, username, password, is_hashed=False):
         self.username = username
-        self.password_hash = password if len(password) == 64 else self._hash_password(password)
-        self.role = role
+        if is_hashed:
+            self.password_hash = password
+        else:
+            self.password_hash = self._hash_pass(password)
 
-    def _hash_password(self, password):
+    def _hash_pass(self, password):
         return hashlib.sha256(password.encode()).hexdigest()
 
     def verify_password(self, password):
-        return self.password_hash == self._hash_password(password)
+        return self._hash_pass(password) == self.password_hash
 
     def to_dict(self):
-        return {
-            "username": self.username,
-            "password_hash": self.password_hash,
-            "role": self.role
-        }
+        return {"username": self.username, "password": self.password_hash}
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(data["username"], data["password"], is_hashed=True)
