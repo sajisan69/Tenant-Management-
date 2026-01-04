@@ -1,10 +1,10 @@
 class Flat:
-    def __init__(self, flat_id, floor, rent):
+    def __init__(self, flat_id, floor, rent, status="Available", tenant_id=None):
         self.flat_id = flat_id
         self.floor = floor
-        self.rent = float(rent)
-        self.status = "Available"
-        self.tenant_id = None
+        self.rent = int(rent)
+        self.status = status
+        self.tenant_id = tenant_id
 
     def to_dict(self):
         return {
@@ -17,7 +17,4 @@ class Flat:
 
     @classmethod
     def from_dict(cls, data):
-        flat = cls(data['flat_id'], data['floor'], data['rent'])
-        flat.status = data['status']
-        flat.tenant_id = data['tenant_id']
-        return flat
+        return cls(data["flat_id"], data["floor"], data["rent"], data["status"], data["tenant_id"])
