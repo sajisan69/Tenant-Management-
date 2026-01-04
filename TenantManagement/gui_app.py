@@ -1,323 +1,324 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 from datetime import datetime
-from models.building import Building
 
-# Initialize the System Logic
-system = Building()
+COLOR_PRIMARY = "#2C3E50"
+COLOR_ACCENT = "#2980B9"
+COLOR_BG = "#ECF0F1"
+COLOR_TEXT = "#2C3E50"
+FONT_HEADER = ("Segoe UI", 24, "bold")
+FONT_SUB = ("Segoe UI", 12)
+FONT_BODY = ("Segoe UI", 10)
 
-class TenantApp(tk.Tk):
-    def __init__(self):
+# --- MODERN BUTTON ---
+class ModernButton(tk.Button):
+    def __init__(self, master, **kwargs):
+        super().__init__(master, **kwargs)
+        self.default_bg = COLOR_ACCENT
+        self.config(
+            bg=self.default_bg, fg="white",
+            font=("Segoe UI", 10, "bold"),
+            relief="flat", pady=8, padx=15,
+            cursor="hand2",
+            activebackground=self.default_bg,
+            activeforeground="white"
+        )
+        self.bind("<Enter>", self.on_hover)
+        self.bind("<Leave>", self.on_leave)
+
+    def on_hover(self, e):
+        self.config(bg=self.default_bg)
+
+    def on_leave(self, e):
+        self.config(bg=self.default_bg)
+
+# --- PLACEHOLDER FUNCTION ---
+def add_placeholder(entry, placeholder):
+    entry.insert(0, placeholder)
+    entry.config(fg="gray")
+    entry.bind("<FocusIn>", lambda e: (entry.delete(0, "end"), entry.config(fg="black"))
+               if entry.get() == placeholder else None)
+    entry.bind("<FocusOut>", lambda e: (entry.insert(0, placeholder), entry.config(fg="gray"))
+               if entry.get() == "" else None)
+
+# --- MAIN APPLICATION ---
+class MainApp(tk.Tk):
+    def __init__(self, system):
         super().__init__()
-        self.title("Tenant & Building Manager")
-        self.geometry("700x500")
-        self.configure(bg="#f0f0f0")
+        self.title("Tenant & Building Management System")
+        self.geometry("1200x800")
+        self.configure(bg=COLOR_BG)
+        self.system = system
 
-        # Container for all frames
-        self.container = tk.Frame(self)
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure("Treeview.Heading", font=("Segoe UI", 10, "bold"), background="#BDC3C7", foreground="black", padding=5)
+        style.configure("Treeview", font=("Segoe UI", 10), rowheight=30, background="white")
+        style.map("Treeview", background=[('selected', COLOR_ACCENT)])
+
+        self.container = tk.Frame(self, bg=COLOR_BG)
         self.container.pack(fill="both", expand=True)
-
         self.frames = {}
-        
-        # Define all screens (Frames)
-        for F in (LoginScreen, SignUpScreen, AdminDashboard, TenantDashboard):
-            frame = F(self.container, self)
+
+        for F in (LoginFrame, SignupFrame, AdminFrame, TenantFrame):
+            frame = F(self.container, self, system)
             self.frames[F] = frame
             frame.grid(row=0, column=0, sticky="nsew")
 
-        self.show_frame(LoginScreen)
+        self.show_frame(LoginFrame)
 
     def show_frame(self, cont, data=None):
         frame = self.frames[cont]
-        if hasattr(frame, "update_data") and data:
-            frame.update_data(data)
-        elif hasattr(frame, "refresh"):
-            frame.refresh()
+        if hasattr(frame, "refresh"):
+            frame.refresh(data)
         frame.tkraise()
 
-# --- 1. LOGIN SCREEN ---
-class LoginScreen(tk.Frame):
-    def __init__(self, parent, controller):
-        super().__init__(parent, bg="#f0f0f0")
+# --- LOGIN FRAME ---
+class LoginFrame(tk.Frame):
+    def __init__(self, parent, controller, system):
+        super().__init__(parent, bg=COLOR_PRIMARY)
         self.controller = controller
+        self.system = system
 
-        # Header
-        tk.Label(self, text="🏢 Building Management System", font=("Arial", 20, "bold"), bg="#f0f0f0").pack(pady=40)
+        card = tk.Frame(self, bg="white", padx=40, pady=40, relief="raised", bd=1)
+        card.place(relx=0.5, rely=0.5, anchor="center")
 
-        # Notebook for Tabs (Tenant Login / Admin Login)
-        tabs = ttk.Notebook(self)
-        tabs.pack(expand=True, fill="both", padx=50, pady=20)
+        tk.Label(card, text="Welcome Back", font=FONT_HEADER, bg="white", fg=COLOR_TEXT).pack(pady=(0, 20))
 
-        # -- Tenant Tab --
-        tab_tenant = tk.Frame(tabs, bg="white")
-        tabs.add(tab_tenant, text="  Tenant Login  ")
-        
-        tk.Label(tab_tenant, text="Tenant ID (e.g., T-001):", bg="white").pack(pady=5)
-        self.entry_tid = ttk.Entry(tab_tenant)
-        self.entry_tid.pack(pady=5)
-        
-        tk.Label(tab_tenant, text="Password:", bg="white").pack(pady=5)
-        self.entry_tpwd = ttk.Entry(tab_tenant, show="*")
-        self.entry_tpwd.pack(pady=5)
-        
-        ttk.Button(tab_tenant, text="Login", command=self.login_tenant).pack(pady=15)
-        
-        # Link to Sign Up
-        tk.Button(tab_tenant, text="New Tenant? Sign Up Here", command=lambda: controller.show_frame(SignUpScreen), 
-                  bg="white", fg="blue", bd=0, cursor="hand2").pack(pady=10)
+        self.notebook = ttk.Notebook(card)
+        self.notebook.pack(fill="x", pady=10)
 
-        # -- Admin Tab --
-        tab_admin = tk.Frame(tabs, bg="white")
-        tabs.add(tab_admin, text="  Admin Login  ")
-        
-        tk.Label(tab_admin, text="Username:", bg="white").pack(pady=5)
-        self.entry_auser = ttk.Entry(tab_admin)
-        self.entry_auser.pack(pady=5)
-        
-        tk.Label(tab_admin, text="Password:", bg="white").pack(pady=5)
-        self.entry_apwd = ttk.Entry(tab_admin, show="*")
-        self.entry_apwd.pack(pady=5)
-        
-        ttk.Button(tab_admin, text="Login as Admin", command=self.login_admin).pack(pady=15)
+        t_frame = tk.Frame(self.notebook, bg="white", pady=15)
+        self.notebook.add(t_frame, text="  Tenant Login  ")
+        self.create_form(t_frame, "Username", "Password", self.do_t_login)
 
-    def login_tenant(self):
-        tid = self.entry_tid.get()
-        pwd = self.entry_tpwd.get()
-        tenant = system.login_tenant(tid, pwd)
-        if tenant:
-            self.entry_tid.delete(0, tk.END)
-            self.entry_tpwd.delete(0, tk.END)
-            self.controller.show_frame(TenantDashboard, data=tenant)
+        a_frame = tk.Frame(self.notebook, bg="white", pady=15)
+        self.notebook.add(a_frame, text="  Admin Login  ")
+        self.create_form(a_frame, "Admin ID", "Password", self.do_a_login)
+
+        tk.Button(card, text="Create New Tenant Account", font=("Segoe UI", 9, "underline"),
+                  bg="white", fg=COLOR_ACCENT, bd=0, cursor="hand2",
+                  command=lambda: controller.show_frame(SignupFrame)).pack(pady=10)
+
+    def create_form(self, parent, lbl1, lbl2, cmd):
+        tk.Label(parent, text=lbl1, font=FONT_SUB, bg="white", fg="gray").pack(anchor="w")
+        e1 = tk.Entry(parent, font=FONT_BODY, width=30, relief="solid", bd=1)
+        e1.pack(pady=(0, 10), ipady=5)
+
+        tk.Label(parent, text=lbl2, font=FONT_SUB, bg="white", fg="gray").pack(anchor="w")
+        e2 = tk.Entry(parent, show="•", font=FONT_BODY, width=30, relief="solid", bd=1)
+        e2.pack(pady=(0, 15), ipady=5)
+
+        ModernButton(parent, text="LOGIN", command=lambda: cmd(e1.get(), e2.get())).pack(fill="x")
+
+    def do_t_login(self, u, p):
+        t = self.system.tenant_login(u, p)
+        if t:
+            self.controller.show_frame(TenantFrame, t)
         else:
-            messagebox.showerror("Error", "Invalid ID or Password")
+            messagebox.showerror("Login Failed", "Invalid Tenant credentials")
 
-    def login_admin(self):
-        user = self.entry_auser.get()
-        pwd = self.entry_apwd.get()
-        if system.admin_login(user, pwd):
-            self.entry_auser.delete(0, tk.END)
-            self.entry_apwd.delete(0, tk.END)
-            self.controller.show_frame(AdminDashboard)
+    def do_a_login(self, u, p):
+        if self.system.admin_login(u, p):
+            self.controller.show_frame(AdminFrame)
         else:
-            messagebox.showerror("Error", "Invalid Credentials")
+            messagebox.showerror("Login Failed", "Invalid Admin credentials")
 
-# --- 2. SIGN UP SCREEN ---
-class SignUpScreen(tk.Frame):
-    def __init__(self, parent, controller):
-        super().__init__(parent, bg="#f0f0f0")
-        self.controller = controller
+# --- SIGNUP FRAME ---
+class SignupFrame(tk.Frame):
+    def __init__(self, parent, controller, system):
+        super().__init__(parent, bg=COLOR_BG)
+        card = tk.Frame(self, bg="white", padx=40, pady=40, relief="groove")
+        card.place(relx=0.5, rely=0.5, anchor="center")
 
-        tk.Label(self, text="New Tenant Registration", font=("Arial", 16), bg="#f0f0f0").pack(pady=20)
-        
-        form_frame = tk.Frame(self, bg="#f0f0f0")
-        form_frame.pack(pady=10)
+        tk.Label(card, text="New Account", font=FONT_HEADER, bg="white").pack(pady=(0, 20))
 
-        tk.Label(form_frame, text="Full Name:", bg="#f0f0f0").grid(row=0, column=0, pady=5, sticky="e")
-        self.ent_name = ttk.Entry(form_frame)
-        self.ent_name.grid(row=0, column=1, pady=5)
+        self.entries = {}
+        for label in ["Name", "Phone", "Username", "Password"]:
+            tk.Label(card, text=label, bg="white", anchor="w").pack(fill="x")
+            e = tk.Entry(card, width=35, relief="solid", bd=1)
+            if label == "Password": e.config(show="•")
+            e.pack(pady=5, ipady=3)
+            self.entries[label] = e
 
-        tk.Label(form_frame, text="Phone:", bg="#f0f0f0").grid(row=1, column=0, pady=5, sticky="e")
-        self.ent_phone = ttk.Entry(form_frame)
-        self.ent_phone.grid(row=1, column=1, pady=5)
+        ModernButton(card, text="REGISTER", command=lambda: self.register(controller, system)).pack(fill="x", pady=20)
+        tk.Button(card, text="Back to Login", bg="white", bd=0, fg="gray",
+                  command=lambda: controller.show_frame(LoginFrame)).pack()
 
-        tk.Label(form_frame, text="Username:", bg="#f0f0f0").grid(row=2, column=0, pady=5, sticky="e")
-        self.ent_user = ttk.Entry(form_frame)
-        self.ent_user.grid(row=2, column=1, pady=5)
-
-        tk.Label(form_frame, text="Password:", bg="#f0f0f0").grid(row=3, column=0, pady=5, sticky="e")
-        self.ent_pass = ttk.Entry(form_frame, show="*")
-        self.ent_pass.grid(row=3, column=1, pady=5)
-
-        ttk.Button(self, text="Register", command=self.register).pack(pady=20)
-        ttk.Button(self, text="Back to Login", command=lambda: controller.show_frame(LoginScreen)).pack()
-
-    def register(self):
-        name = self.ent_name.get()
-        phone = self.ent_phone.get()
-        user = self.ent_user.get()
-        pwd = self.ent_pass.get()
-
-        if name and pwd:
-            tid = system.sign_up_tenant(name, phone, user, pwd)
-            messagebox.showinfo("Success", f"Account Created!\n\nYOUR ID IS: {tid}\nPlease use this ID to login.")
-            self.controller.show_frame(LoginScreen)
+    def register(self, controller, system):
+        vals = {k: v.get() for k, v in self.entries.items()}
+        if all(vals.values()):
+            system.register_tenant(vals["Name"], vals["Phone"], vals["Username"], vals["Password"])
+            messagebox.showinfo("Success", "Account created! Please login.")
+            controller.show_frame(LoginFrame)
         else:
-            messagebox.showwarning("Warning", "Name and Password are required.")
+            messagebox.showerror("Error", "All fields are required.")
 
-# --- 3. ADMIN DASHBOARD ---
-class AdminDashboard(tk.Frame):
-    def __init__(self, parent, controller):
-        super().__init__(parent, bg="#f0f0f0")
-        self.controller = controller
-        
-        # Top Bar
-        top = tk.Frame(self, bg="#333", height=50)
-        top.pack(fill="x")
-        tk.Label(top, text="Admin Dashboard", fg="white", bg="#333", font=("Arial", 14)).pack(side="left", padx=20)
-        ttk.Button(top, text="Logout", command=lambda: controller.show_frame(LoginScreen)).pack(side="right", padx=10, pady=10)
+# --- ADMIN FRAME ---
+class AdminFrame(tk.Frame):
+    def __init__(self, parent, controller, system):
+        super().__init__(parent, bg=COLOR_BG)
+        self.system = system
 
-        # Tabs
-        self.tabs = ttk.Notebook(self)
-        self.tabs.pack(expand=True, fill="both", padx=10, pady=10)
+        sidebar = tk.Frame(self, bg=COLOR_PRIMARY, width=250)
+        sidebar.pack(side="left", fill="y")
 
-        # -- Tab 1: Flats --
-        self.tab_flats = tk.Frame(self.tabs, bg="white")
-        self.tabs.add(self.tab_flats, text="Manage Flats")
-        self.setup_flats_tab()
+        tk.Label(sidebar, text="Admin\nPanel", bg=COLOR_PRIMARY, fg="white",
+                 font=("Segoe UI", 20, "bold"), pady=30).pack()
 
-        # -- Tab 2: Assign --
-        self.tab_assign = tk.Frame(self.tabs, bg="white")
-        self.tabs.add(self.tab_assign, text="Assign Flat")
-        self.setup_assign_tab()
+        self.content_area = tk.Frame(self, bg=COLOR_BG, padx=20, pady=20)
+        self.content_area.pack(side="right", fill="both", expand=True)
 
-        # -- Tab 3: Reports --
-        self.tab_reports = tk.Frame(self.tabs, bg="white")
-        self.tabs.add(self.tab_reports, text="Reports")
-        self.setup_reports_tab()
+        for btn_text, cmd in [("Manage Flats", self.show_flats),
+                              ("Manage Tenants", self.show_tenants),
+                              ("Logout", lambda: controller.show_frame(LoginFrame))]:
+            b = tk.Button(sidebar, text=btn_text, bg=COLOR_PRIMARY, fg="white",
+                          font=("Segoe UI", 12), bd=0, pady=15, command=cmd)
+            b.pack(fill="x")
 
-    def refresh(self):
-        self.update_flat_list()
-        self.update_tenant_list()
+        self.show_flats()
 
-    def setup_flats_tab(self):
-        frame = tk.Frame(self.tab_flats, bg="white")
-        frame.pack(pady=10)
-        
-        # Add Flat Inputs
-        ttk.Label(frame, text="Flat ID:").grid(row=0, column=0)
-        self.ent_fid = ttk.Entry(frame, width=10)
-        self.ent_fid.grid(row=0, column=1, padx=5)
-        
-        ttk.Label(frame, text="Floor:").grid(row=0, column=2)
-        self.ent_flr = ttk.Entry(frame, width=10)
-        self.ent_flr.grid(row=0, column=3, padx=5)
-        
-        ttk.Label(frame, text="Rent:").grid(row=0, column=4)
-        self.ent_rent = ttk.Entry(frame, width=10)
-        self.ent_rent.grid(row=0, column=5, padx=5)
+    def clear_content(self):
+        for widget in self.content_area.winfo_children(): widget.destroy()
 
-        ttk.Button(frame, text="Add Flat", command=self.add_flat).grid(row=0, column=6, padx=10)
+    def show_flats(self):
+        self.clear_content()
+        tk.Label(self.content_area, text="Flats Management", font=FONT_HEADER, bg=COLOR_BG).pack(anchor="w", pady=10)
 
-        # List Area
-        columns = ("ID", "Floor", "Rent", "Status", "Tenant")
-        self.tree_flats = ttk.Treeview(self.tab_flats, columns=columns, show="headings", height=10)
-        for col in columns: self.tree_flats.heading(col, text=col)
-        self.tree_flats.pack(pady=10, fill="x")
+        ctrl = tk.Frame(self.content_area, bg=COLOR_BG)
+        ctrl.pack(fill="x", pady=10)
 
-    def setup_assign_tab(self):
-        frame = tk.Frame(self.tab_assign, bg="white")
-        frame.pack(pady=20)
+        fid = tk.Entry(ctrl, width=10); fid.pack(side="left", padx=5); add_placeholder(fid, "ID")
+        ffl = tk.Entry(ctrl, width=10); ffl.pack(side="left", padx=5); add_placeholder(ffl, "Floor")
+        frt = tk.Entry(ctrl, width=10); frt.pack(side="left", padx=5); add_placeholder(frt, "Rent")
 
-        ttk.Label(frame, text="Tenant ID:").grid(row=0, column=0)
-        self.ent_assign_tid = ttk.Entry(frame)
-        self.ent_assign_tid.grid(row=0, column=1, padx=5)
+        ModernButton(ctrl, text="+ Add Flat", command=lambda: [self.system.add_flat(fid.get(), ffl.get(), frt.get()),
+                                                               self.refresh_flats()]).pack(side="left", padx=10)
+        tk.Button(ctrl, text="Delete Selected", bg="#E74C3C", fg="white", font=FONT_BODY, relief="flat", padx=10,
+                  command=self.del_flat).pack(side="right")
 
-        ttk.Label(frame, text="Flat ID:").grid(row=1, column=0)
-        self.ent_assign_fid = ttk.Entry(frame)
-        self.ent_assign_fid.grid(row=1, column=1, padx=5)
+        cols = ("ID", "Floor", "Rent", "Status", "Tenant")
+        self.tree_flats = ttk.Treeview(self.content_area, columns=cols, show="headings")
+        for c in cols: self.tree_flats.heading(c, text=c)
+        self.tree_flats.pack(fill="both", expand=True)
+        self.refresh_flats()
 
-        ttk.Button(frame, text="Assign", command=self.assign_flat).grid(row=2, column=0, columnspan=2, pady=10)
-
-    def setup_reports_tab(self):
-        ttk.Button(self.tab_reports, text="Export Financial CSV", command=self.export_csv).pack(pady=20)
-        
-        # Tenant List
-        tk.Label(self.tab_reports, text="All Tenants", bg="white", font=("Arial", 12)).pack()
-        columns = ("ID", "Name", "Flat", "Dues")
-        self.tree_tenants = ttk.Treeview(self.tab_reports, columns=columns, show="headings", height=10)
-        for col in columns: self.tree_tenants.heading(col, text=col)
-        self.tree_tenants.pack(pady=10, fill="x")
-
-    # -- Logic --
-    def add_flat(self):
-        if system.add_flat(self.ent_fid.get(), self.ent_flr.get(), self.ent_rent.get()):
-            messagebox.showinfo("Success", "Flat Added")
-            self.refresh()
-        else:
-            messagebox.showerror("Error", "Flat ID already exists")
-
-    def assign_flat(self):
-        if system.assign_flat(self.ent_assign_tid.get(), self.ent_assign_fid.get()):
-            messagebox.showinfo("Success", "Flat Assigned")
-            self.refresh()
-        else:
-            messagebox.showerror("Error", "Check IDs or Availability")
-
-    def export_csv(self):
-        success, path = system.export_payment_history()
-        if success: messagebox.showinfo("Export", f"File saved to: {path}")
-        else: messagebox.showerror("Error", path)
-
-    def update_flat_list(self):
-        for row in self.tree_flats.get_children(): self.tree_flats.delete(row)
-        for f in system.list_flats():
+    def refresh_flats(self):
+        for i in self.tree_flats.get_children(): self.tree_flats.delete(i)
+        for f in self.system.flats:
             self.tree_flats.insert("", "end", values=(f.flat_id, f.floor, f.rent, f.status, f.tenant_id or "-"))
 
-    def update_tenant_list(self):
-        for row in self.tree_tenants.get_children(): self.tree_tenants.delete(row)
-        for t in system.list_tenants():
-            self.tree_tenants.insert("", "end", values=(t.tenant_id, t.name, t.assigned_flat_id or "-", f"${t.get_pending_dues()}"))
+    def del_flat(self):
+        sel = self.tree_flats.selection()
+        if sel:
+            self.system.delete_flat(self.tree_flats.item(sel[0])['values'][0])
+            self.refresh_flats()
 
-# --- 4. TENANT DASHBOARD ---
-class TenantDashboard(tk.Frame):
-    def __init__(self, parent, controller):
-        super().__init__(parent, bg="#f0f0f0")
+    def show_tenants(self):
+        self.clear_content()
+        tk.Label(self.content_area, text="Tenant Assignment", font=FONT_HEADER, bg=COLOR_BG).pack(anchor="w", pady=10)
+
+        ctrl = tk.Frame(self.content_area, bg=COLOR_BG)
+        ctrl.pack(fill="x", pady=10)
+
+        tid = tk.Entry(ctrl, width=15); tid.pack(side="left", padx=5); add_placeholder(tid, "Tenant ID")
+        fid = tk.Entry(ctrl, width=15); fid.pack(side="left", padx=5); add_placeholder(fid, "Flat ID")
+
+        ModernButton(ctrl, text="Assign Flat",
+                     command=lambda: [self.system.assign_flat(tid.get(), fid.get()), self.refresh_tenants()]).pack(side="left", padx=10)
+
+        cols = ("ID", "Name", "Phone", "Flat", "Dues")
+        self.tree_tenants = ttk.Treeview(self.content_area, columns=cols, show="headings")
+        for c in cols: self.tree_tenants.heading(c, text=c)
+        self.tree_tenants.pack(fill="both", expand=True)
+        self.refresh_tenants()
+
+    def refresh_tenants(self):
+        for i in self.tree_tenants.get_children(): self.tree_tenants.delete(i)
+        for t in self.system.tenants:
+            self.tree_tenants.insert("", "end", values=(t.tenant_id, t.name, t.phone, t.assigned_flat_id or "None",
+                                                        t.get_due_amount()))
+
+# --- TENANT FRAME ---
+class TenantFrame(tk.Frame):
+    def __init__(self, parent, controller, system):
+        super().__init__(parent, bg=COLOR_BG)
+        self.system = system
+        self.tenant = None
         self.controller = controller
-        self.current_tenant = None
 
-        # Top Bar
-        self.top_lbl = tk.Label(self, text="", bg="#0078D7", fg="white", font=("Arial", 16), pady=10)
-        self.top_lbl.pack(fill="x")
-        
-        # Dues Section
-        self.dues_frame = tk.Frame(self, bg="white", bd=1, relief="solid")
-        self.dues_frame.pack(pady=20, padx=20, fill="x")
-        
-        self.lbl_dues = tk.Label(self.dues_frame, text="Pending Dues: $0.00", font=("Arial", 18, "bold"), fg="red", bg="white")
-        self.lbl_dues.pack(pady=10)
-        
-        self.btn_pay = ttk.Button(self.dues_frame, text="Pay Now", command=self.pay_rent)
-        self.btn_pay.pack(pady=10)
+        self.header = tk.Frame(self, bg=COLOR_PRIMARY, height=80)
+        self.header.pack(fill="x")
+        self.lbl_welcome = tk.Label(self.header, text="Welcome", bg=COLOR_PRIMARY, fg="white", font=("Segoe UI", 18))
+        self.lbl_welcome.pack(side="left", padx=20, pady=20)
+        tk.Button(self.header, text="Logout", bg="#E74C3C", fg="white", relief="flat", padx=10,
+                  command=lambda: controller.show_frame(LoginFrame)).pack(side="right", padx=20)
 
-        # History Section
-        tk.Label(self, text="Payment History", bg="#f0f0f0").pack()
-        columns = ("Date", "Month", "Amount")
-        self.tree_hist = ttk.Treeview(self, columns=columns, show="headings", height=8)
-        for col in columns: self.tree_hist.heading(col, text=col)
-        self.tree_hist.pack(pady=5, padx=20, fill="both", expand=True)
+        main = tk.Frame(self, bg=COLOR_BG, padx=40, pady=40)
+        main.pack(fill="both", expand=True)
 
-        ttk.Button(self, text="Logout", command=lambda: controller.show_frame(LoginScreen)).pack(pady=10)
+        info_card = tk.Frame(main, bg="white", padx=20, pady=20, relief="solid", bd=1)
+        info_card.pack(fill="x", pady=10)
+        self.lbl_details = tk.Label(info_card, text="--", font=FONT_SUB, bg="white", justify="left")
+        self.lbl_details.pack(anchor="w")
+        self.lbl_due = tk.Label(info_card, text="Due: $0", font=("Segoe UI", 24, "bold"), fg="#E74C3C", bg="white")
+        self.lbl_due.pack(anchor="e")
 
-    def update_data(self, tenant):
-        self.current_tenant = tenant
-        self.top_lbl.config(text=f"Welcome, {tenant.name} ({tenant.tenant_id})")
-        self.refresh_dues()
-        self.refresh_history()
+        btn_frame = tk.Frame(main, bg=COLOR_BG)
+        btn_frame.pack(fill="x", pady=20)
+        ModernButton(btn_frame, text="Make Payment (QR)", command=self.pay).pack(side="left", padx=5)
+        ModernButton(btn_frame, text="Download Receipt", command=self.download).pack(side="left", padx=5)
 
-    def refresh_dues(self):
-        dues = self.current_tenant.get_pending_dues()
-        self.lbl_dues.config(text=f"Pending Dues: ${dues}")
-        if dues == 0:
-            self.lbl_dues.config(fg="green")
-            self.btn_pay.config(state="disabled")
-        else:
-            self.lbl_dues.config(fg="red")
-            self.btn_pay.config(state="normal")
+        tk.Label(main, text="Payment History", font=("Segoe UI", 14, "bold"), bg=COLOR_BG).pack(anchor="w")
+        self.tree = ttk.Treeview(main, columns=("Date", "Month", "Amount"), show="headings", height=8)
+        self.tree.heading("Date", text="Date")
+        self.tree.heading("Month", text="Month")
+        self.tree.heading("Amount", text="Amount")
+        self.tree.pack(fill="x", pady=5)
 
-    def refresh_history(self):
-        for row in self.tree_hist.get_children(): self.tree_hist.delete(row)
-        for p in self.current_tenant.payments:
-            self.tree_hist.insert("", "end", values=(p.date, p.month, f"${p.amount}"))
+    def refresh(self, tenant):
+        self.tenant = tenant
+        self.lbl_welcome.config(text=f"Welcome, {tenant.name}")
+        self.lbl_details.config(
+            text=f"Tenant ID: {tenant.tenant_id}\nPhone: {tenant.phone}\nFlat: {tenant.assigned_flat_id or 'Not Assigned'}")
+        due = tenant.get_due_amount()
+        self.lbl_due.config(text=f"Due: ৳{due}", fg="#E74C3C" if due > 0 else "#27AE60")
 
-    def pay_rent(self):
-        dues = self.current_tenant.get_pending_dues()
-        month = datetime.now().strftime("%B")
-        if messagebox.askyesno("Confirm", f"Pay ${dues} for {month}?"):
-            system.record_payment(self.current_tenant.tenant_id, dues, month)
-            messagebox.showinfo("Success", "Payment Successful! Receipt Saved.")
-            self.refresh_dues()
-            self.refresh_history()
+        for i in self.tree.get_children():
+            self.tree.delete(i)
+        for p in reversed(tenant.payments):
+            self.tree.insert("", "end", values=(p.date, p.month, f"৳{p.amount}"))
 
-if __name__ == "__main__":
-    app = TenantApp()
-    app.mainloop()
+    def pay(self):
+        rent_amount = self.tenant.flat_rent
+        if rent_amount <= 0:
+            messagebox.showwarning("Payment Error", "You do not have an assigned flat or rent amount is 0.")
+            return
+
+        top = tk.Toplevel(self)
+        top.geometry("300x400")
+        top.title("Scan & Pay")
+        tk.Label(top, text=f"Pay Rent: ৳{rent_amount}", font=("Segoe UI", 14, "bold")).pack(pady=10)
+        tk.Label(top, text="[ QR CODE ]", bg="black", fg="white", width=20, height=10).pack(pady=10)
+        tk.Label(top, text="(Scan with bKash/Nagad)", font=("Segoe UI", 10)).pack()
+
+        def confirm():
+            current_month = datetime.now().strftime("%B")
+            success = self.system.add_payment(self.tenant.tenant_id, rent_amount, current_month)
+            if success:
+                messagebox.showinfo("Success", "Payment Verified and Saved!")
+                self.refresh(self.tenant)
+                top.destroy()
+            else:
+                messagebox.showerror("Error", "Could not save payment. Check console.")
+
+        ModernButton(top, text="I have Paid", command=confirm).pack(pady=20)
+
+    def download(self):
+        if not self.tenant.payments:
+            return messagebox.showinfo("Info", "No payments found.")
+        last = self.tenant.payments[-1]
+        f = filedialog.asksaveasfilename(defaultextension=".txt")
+        if f:
+            with open(f, "w") as file:
+                file.write(f"RECEIPT\nTenant: {self.tenant.name}\nAmount: {last.amount}\nDate: {last.date}")
