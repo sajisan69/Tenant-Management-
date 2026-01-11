@@ -1,0 +1,10 @@
+[
+    {
+        "complaint_id": "C-001",
+        "tenant_id": "T-007",
+        "tenant_name": "Cristiano Ronaldo",
+        "description": "A broken refrigerator that causes food spoilage or a non-functioning stove requires prompt attention.",
+        "status": "Resolved",
+        "date": "2026-01-12"
+    }
+]
