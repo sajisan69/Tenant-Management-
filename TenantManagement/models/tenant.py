@@ -1,6 +1,8 @@
 import hashlib
 from datetime import datetime
 from models.payment import Payment
+
+
 class Tenant:
     def __init__(self, tenant_id, name, phone, username, password_hash, role="tenant", assigned_flat_id=None,
                  flat_rent=0.0, payments=None, is_hashed=True):
@@ -8,10 +10,12 @@ class Tenant:
         self.name = name
         self.phone = phone
         self.username = username
+
         if is_hashed:
             self.password_hash = password_hash
         else:
             self.password_hash = hashlib.sha256(password_hash.encode()).hexdigest()
+
         self.role = role
         self.assigned_flat_id = assigned_flat_id
         self.flat_rent = float(flat_rent)
@@ -21,18 +25,24 @@ class Tenant:
         return hashlib.sha256(password.encode()).hexdigest() == self.password_hash
 
     def get_due_amount(self):
+        """
+        Logic:
+        1. If no flat -> Due 0
+        2. If current month is PAID and APPROVED -> Due 0
+        3. Else -> Due is Rent Amount
+        """
         if not self.assigned_flat_id or self.flat_rent == 0:
             return 0.0
+
         current_month = datetime.now().strftime("%B")
 
         for p in reversed(self.payments):
-            if p.month == current_month:
+            # Must match month AND be Approved
+            if p.month == current_month and p.status == "Approved":
                 return 0.0
+
         return self.flat_rent
 
-    def add_payment(self, amount, month):
-        p = Payment(amount, month, datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        self.payments.append(p)
     def to_dict(self):
         return {
             "username": self.username,
@@ -45,6 +55,7 @@ class Tenant:
             "flat_rent": self.flat_rent,
             "payments": [p.to_dict() for p in self.payments]
         }
+
     @classmethod
     def from_dict(cls, data):
         payments = [Payment.from_dict(p) for p in data.get("payments", [])]
